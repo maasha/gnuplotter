@@ -1,0 +1,2 @@
+class GnuPlotter
+end
