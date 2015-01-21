@@ -17,7 +17,5 @@ Gem::Specification.new do |s|
   s.rubygems_version  = "2.0.0"
   s.files             = `git ls-files`.split("\n")
   s.test_files        = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables       = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.extra_rdoc_files  = Dir["wiki/*.rdoc"]
   s.require_paths     = ["lib"]
 end
