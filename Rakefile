@@ -6,7 +6,7 @@ Bundler::GemHelper.install_tasks
 task :default => "test"
 
 Rake::TestTask.new do |t|
-  t.test_files = Dir['test/**/*'].select { |f| f.match(/\.rb$/) }
+  t.test_files = Dir['test/*'].select { |f| f.match(/^test_.+\.rb$/) }
   t.warning    = true
 end
 
