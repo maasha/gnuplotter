@@ -7,6 +7,8 @@ class TestGnuPlotter < Test::Unit::TestCase
   def setup
   end
 
-  test "GnuPliotter::.new" do
+  test "#new" do
+    gp = GnuPlotter.new.set(title: "test")
+    assert_equal("", gp.to_s)
   end
 end

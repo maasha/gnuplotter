@@ -1,2 +1,4 @@
-module GnuPlotter
+require 'gnuplotter/version'
+
+class GnuPlotter
 end

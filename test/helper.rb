@@ -24,19 +24,8 @@
 #                                                                                #
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
 
-require 'simplecov'
-
-SimpleCov.start do
-  add_filter "/test/"
-end
-
-SimpleCov.command_name 'test:units'
-
-require 'biopieces'
+require 'gnuplotter'
 require 'test/unit'
-require 'mocha/test_unit'
-
-ENV['BIOPIECES_ENV'] = 'test'
 
 module Kernel
   def capture_stdout
