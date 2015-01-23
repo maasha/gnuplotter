@@ -90,11 +90,19 @@ class TestGnuPlotter < Test::Unit::TestCase
     assert_equal(expected, @gp.to_gp)
   end
 
-#  test "#plot produces something" do
-#    assert_equal("", @gp.plot)
-#  end
-#
-#  test "#splot produces something" do
-#    assert_equal("", @gp.splot)
-#  end
+  test "#plot produces something" do
+    @gp.add_dataset(using: "1:2:3:4", with: "vectors nohead", title: "'foo'") do |plotter|
+        @data1.map { |d| plotter << d }
+    end
+
+    assert_equal(String, @gp.plot.class)
+  end
+
+  test "#splot produces something" do
+    @gp.add_dataset(matrix: "with lines notitle") do |plotter|
+        @data1.map { |d| plotter << d }
+    end
+
+    assert_equal(String, @gp.splot.class)
+  end
 end

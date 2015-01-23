@@ -1,6 +1,7 @@
 require 'pp'
 require 'gnuplotter/version'
 require 'tempfile'
+require 'open3'
 
 class GnuPlotterError < StandardError; end
 
@@ -61,36 +62,16 @@ class GnuPlotter
 
   # Method that returns lines of gnuplot global setting, plot settings and data.
   def to_gp(cmd = "plot")
-    cmd_lines = []
-
-    @options.each do |method, options|
-      options.each do |key, list|
-        list.each do |value|
-          if value == :true or value === true
-            cmd_lines << %Q{#{method} #{key}}
-          elsif NOQUOTE.include? key.to_sym
-            cmd_lines << %Q{#{method} #{key} #{value}}
-          else
-            cmd_lines << %Q{#{method} #{key} "#{value}"}
-          end
-        end
-      end
-    end
-
     if ! @datasets.empty?
-      opt_list   = []
       data_lines = []
 
       @datasets.each do |dataset|
-        opt_list << dataset.format_options
-        data_lines.push *dataset.format_data, "e"
+        data_lines.push(*dataset.format_data, "e")
       end
 
-      opt_line = "#{cmd} " + opt_list.join(", ")
-
-      cmd_lines + [opt_line] + data_lines
+      plot_settings + [data_settings(cmd, true)] + data_lines
     else
-      cmd_lines
+      plot_settings
     end
   end
 
@@ -109,20 +90,29 @@ class GnuPlotter
 
   # Method to execute the plotting of added datasets.
   def plot
-    #@datasets.each { |dataset| dataset.close }
+    gnuplot("plot")
+  end
+
+  # Method to execute the splotting of added datasets.
+  def splot
+    gnuplot("splot")
+  end
+
+  private
+
+  def gnuplot(method)
+    @datasets.each { |dataset| dataset.close }
 
     result = nil
 
     Open3.popen3("gnuplot -persist") do |stdin, stdout, stderr, wait_thr|
+      plot_settings.each { |line| stdin.puts line }
 
       if @datasets.empty?
-        lines << "plot 1/0"
+        stdin.puts "#{method} 1/0"
       else
-        lines << "plot " + @datasets.map { |dataset| dataset.to_gp }.join(", ")
+        stdin.puts data_settings(method)
       end
-
-      lines.map { |l| $stderr.puts l } if $VERBOSE
-      lines.map { |l| stdin.puts l }
 
       stdin.close
       result = stdout.read
@@ -135,10 +125,39 @@ class GnuPlotter
       end
     end
 
+    # unlink files
+
     result
   end
 
-  def splot
+  def plot_settings
+    lines = []
+
+    @options.each do |method, options|
+      options.each do |key, list|
+        list.each do |value|
+          if value == :true or value === true
+            lines << %Q{#{method} #{key}}
+          elsif NOQUOTE.include? key.to_sym
+            lines << %Q{#{method} #{key} #{value}}
+          else
+            lines << %Q{#{method} #{key} "#{value}"}
+          end
+        end
+      end
+    end
+
+    lines
+  end
+
+  def data_settings(method, input = nil)
+    list = []
+
+    @datasets.each do |dataset|
+      list << dataset.format_options(input)
+    end
+
+    "#{method} " + list.join(", ")
   end
 
   # Nested class for GnuPlot datasets.
@@ -156,10 +175,19 @@ class GnuPlotter
 
     alias :write :<<
 
+    def close
+      @io.close unless @io.closed?
+    end
+
     # Method that builds a plot/splot command string from dataset options.
-    def format_options
+    def format_options(input = nil)
       options = []
-      options << %Q{"-"}
+
+      if input
+        options << %Q{"-"}
+      else
+        options << %Q{"#{@file.path}"}
+      end
 
       @options.each do |key, value|
         if value == :true
@@ -172,6 +200,7 @@ class GnuPlotter
       options.join(" ")
     end
 
+    # Method that returns data lines from file.
     def format_data
       lines = []
 
