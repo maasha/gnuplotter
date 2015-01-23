@@ -1,11 +1,35 @@
-require 'pp'
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
+#                                                                                #
+# Copyright (C) 2015 Martin Asser Hansen (mail@maasha.dk).                       #
+#                                                                                #
+# This program is free software; you can redistribute it and/or                  #
+# modify it under the terms of the GNU General Public License                    #
+# as published by the Free Software Foundation; either version 2                 #
+# of the License, or (at your option) any later version.                         #
+#                                                                                #
+# This program is distributed in the hope that it will be useful,                #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of                 #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                  #
+# GNU General Public License for more details.                                   #
+#                                                                                #
+# You should have received a copy of the GNU General Public License              #
+# along with this program; if not, write to the Free Software                    #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. #
+#                                                                                #
+# http://www.gnu.org/copyleft/gpl.html                                           #
+#                                                                                #
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< #
+
 require 'gnuplotter/version'
 require 'tempfile'
 require 'open3'
 
+# Error class for all things Gnuplotter.
 class GnuPlotterError < StandardError; end
 
 class GnuPlotter
+
+  # Quotes around the values of the below keys are stripped.
   NOQUOTE = [
     :auto,
     :autoscale,
@@ -38,6 +62,7 @@ class GnuPlotter
 
   # Method to set an option in the GnuPlot environment e.g:
   # set(title: "Nobel Prize")
+  # set(grid: :true)   # note no such thing as set(grid).
   def set(options)
     raise GnuPlotterError, "Non-hash options given" unless options.is_a? Hash
 
@@ -49,7 +74,7 @@ class GnuPlotter
   end
 
   # Method to unset an option in the GnuPlot environment e.g:
-  # unset(ytics: true)
+  # unset(ytics: true)   # note no such thing as unset(ytics).
   def unset(options)
     raise GnuPlotterError, "Non-hash options given" unless options.is_a? Hash
 
@@ -60,7 +85,7 @@ class GnuPlotter
     self
   end
 
-  # Method that returns lines of gnuplot global setting, plot settings and data.
+  # Method that returns a GnuPlot script as a list of lines.
   def to_gp(cmd = "plot")
     if ! @datasets.empty?
       data_lines = []
@@ -77,7 +102,7 @@ class GnuPlotter
 
   # Method to add a dataset to the current GnuPlot.
   #   add_dataset(using: "1:2:3:4", with: "vectors nohead", title: "'bar'") do |plotter|
-  #     data2.map { |d| plotter << d }
+  #     data.map { |d| plotter << d }
   #   end
   def add_dataset(options = {})
     raise GnuPlotterError, "No block given" unless block_given?
@@ -89,17 +114,21 @@ class GnuPlotter
   end
 
   # Method to execute the plotting of added datasets.
+  # Any plot data, i.e. dumb terminal, is returned.
   def plot
     gnuplot("plot")
   end
 
   # Method to execute the splotting of added datasets.
+  # Any plot data, i.e. dumb terminal, is returned.
   def splot
     gnuplot("splot")
   end
 
   private
 
+  # Method that calls gnuplot via open3 and performs the plotting.
+  # Any plot data, i.e. dumb terminal, is returned.
   def gnuplot(method)
     @datasets.each { |dataset| dataset.close }
 
@@ -125,11 +154,12 @@ class GnuPlotter
       end
     end
 
-    # unlink files
+    @datasets.each { |dataset| dataset.delete }
 
     result
   end
 
+  # Returns a list of lines with the plot settings.
   def plot_settings
     lines = []
 
@@ -150,6 +180,7 @@ class GnuPlotter
     lines
   end
 
+  # Returns one comma seperated line with plot settings for each dataset.
   def data_settings(method, input = nil)
     list = []
 
@@ -162,6 +193,7 @@ class GnuPlotter
 
   # Nested class for GnuPlot datasets.
   class DataSet
+    # Constructor for the DataSet object.
     def initialize(options = {})
       @options = options
       @file    = Tempfile.new("gp")
@@ -175,8 +207,15 @@ class GnuPlotter
 
     alias :write :<<
 
+    # Method to close a DataSet temporary file io.
     def close
       @io.close unless @io.closed?
+    end
+
+    # Method to delete a DataSet temporary file.
+    def delete
+      @io.close unless @io.closed?
+      @file.unlink if File.exist? @file.path
     end
 
     # Method that builds a plot/splot command string from dataset options.
