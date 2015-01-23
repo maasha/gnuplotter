@@ -1,3 +1,4 @@
+require 'pp'
 require 'gnuplotter/version'
 require 'tempfile'
 
@@ -58,8 +59,8 @@ class GnuPlotter
     self
   end
 
-  # Method that returns lines of gnuplot commands, options and data.
-  def to_s(cmd = "plot")
+  # Method that returns lines of gnuplot global setting, plot settings and data.
+  def to_gp(cmd = "plot")
     cmd_lines = []
 
     @options.each do |method, options|
@@ -76,19 +77,21 @@ class GnuPlotter
       end
     end
 
-    cmd_lines  = cmd_lines.join($/)
-    opt_lines  = @datasets.inject([]) { |list, dataset| list << dataset.format_options }.join(", ")
-    data_lines = @datasets.inject([]) { |list, dataset| list << dataset.format_data.join($/) }.join("#$/e#$/")
+    if ! @datasets.empty?
+      opt_list   = []
+      data_lines = []
 
-    if opt_lines.empty?
-      lines = [cmd_lines].join $/
-    elsif data_lines.empty?
-      lines = [cmd_lines, "#{cmd} " + opt_lines].join $/
+      @datasets.each do |dataset|
+        opt_list << dataset.format_options
+        data_lines.push *dataset.format_data, "e"
+      end
+
+      opt_line = "#{cmd} " + opt_list.join(", ")
+
+      cmd_lines + [opt_line] + data_lines
     else
-      lines = [cmd_lines, "#{cmd} " + opt_lines, data_lines].join $/
+      cmd_lines
     end
-
-    lines + $/
   end
 
   # Method to add a dataset to the current GnuPlot.
@@ -142,12 +145,13 @@ class GnuPlotter
   class DataSet
     def initialize(options = {})
       @options = options
-      @data    = []
+      @file    = Tempfile.new("gp")
+      @io      = @file.open
     end
 
     # Write method.
     def <<(*obj)
-      @data << obj
+      @io.puts obj.join(", ")
     end
 
     alias :write :<<
@@ -171,8 +175,14 @@ class GnuPlotter
     def format_data
       lines = []
 
-      @data.each do |row|
-        lines << row.join(", ")
+      @io.close if @io.respond_to? :close
+
+      File.open(@file) do |ios|
+        ios.each do |line|
+          line.chomp!
+
+          lines << line
+        end
       end
 
       lines
