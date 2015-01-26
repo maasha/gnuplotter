@@ -202,7 +202,7 @@ class GnuPlotter
 
     # Write method.
     def <<(*obj)
-      @io.puts obj.join(", ")
+      @io.puts obj.join(" ")
     end
 
     alias :write :<<

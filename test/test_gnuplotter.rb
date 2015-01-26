@@ -55,9 +55,9 @@ class TestGnuPlotter < Test::Unit::TestCase
       'set title "test"',
       'set terminal dumb',
       'plot "-" using 1:2:3:4 with vectors nohead title \'foo\'',
-      '0, 0, 0.5, 0.5',
-      '0, 1, -0.5, 0.5',
-      '1, 1, 1, 0',
+      '0 0 0.5 0.5',
+      '0 1 -0.5 0.5',
+      '1 1 1 0',
       'e'
     ]
 
@@ -77,13 +77,13 @@ class TestGnuPlotter < Test::Unit::TestCase
       'set title "test"',
       'set terminal dumb',
       'plot "-" using 1:2:3:4 with vectors nohead title \'foo\', "-" using 1:2:3:4 with vectors nohead title \'bar\'',
-      '0, 0, 0.5, 0.5',
-      '0, 1, -0.5, 0.5',
-      '1, 1, 1, 0',
+      '0 0 0.5 0.5',
+      '0 1 -0.5 0.5',
+      '1 1 1 0',
       'e',
-      '10, 10, 1.5, 1.5',
-      '10, 11, -1.5, 1.5',
-      '11, 11, 11, 10',
+      '10 10 1.5 1.5',
+      '10 11 -1.5 1.5',
+      '11 11 11 10',
       'e'
     ]
 
