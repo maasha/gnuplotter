@@ -39,6 +39,7 @@ class GnuPlotter
     :datafile,
     :grid,
     :key,
+    :linetype,
     :logscale,
     :nocbtics,
     :palette,
