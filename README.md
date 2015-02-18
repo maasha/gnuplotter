@@ -5,11 +5,11 @@ around Gnuplot with a syntax closely following Gnuplot's.
 
 Installation
 ------------
-First you must install Gnuplot. Follow the instruction at the Gnuplot website:
+First you must install Gnuplot. Follow the instructions at the Gnuplot website:
 
 http://www.gnuplot.info/
 
-Then install the Ruby gem run:
+Then install the Ruby gem:
 
 `gem install gnuplotter`
 
@@ -55,7 +55,7 @@ See more examples in the `examples/` directory.
 
 Testing
 -------
-gnuplotter have a `to_gp` method that dumps a standaline Gnuplot script with
+gnuplotter have a `to_gp` method that dumps a standalone Gnuplot script including
 data, which is very useful for debugging and testing. For the above example
 the output is:
 
