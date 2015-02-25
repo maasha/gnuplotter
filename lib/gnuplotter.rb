@@ -93,6 +93,7 @@ class GnuPlotter
 
       @datasets.each do |dataset|
         data_lines.push(*dataset.format_data, "e")
+        dataset.delete
       end
 
       plot_settings + [data_settings(cmd, true)] + data_lines
