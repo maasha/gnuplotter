@@ -28,7 +28,6 @@ require 'open3'
 class GnuPlotterError < StandardError; end
 
 class GnuPlotter
-
   # Quotes around the values of the below keys are stripped.
   NOQUOTE = [
     :auto,
@@ -57,6 +56,8 @@ class GnuPlotter
 
   # Constructor method for a GnuPlot object.
   def initialize
+    raise GnuPlotterError, "gnuplot not found" unless which "gnuplot"
+
     @options  = Hash.new { |h1, k1| h1[k1] = Hash.new { |h2, k2| h2[k2] = [] } }
     @datasets = []
   end
@@ -128,6 +129,22 @@ class GnuPlotter
   end
 
   private
+
+  # Cross-platform way of finding an executable in the $PATH.
+  #
+  #   which('ruby') #=> /usr/bin/ruby
+  def which(cmd)
+    exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+
+    ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+      exts.each { |ext|
+        exe = File.join(path, "#{cmd}#{ext}")
+        return exe if File.executable?(exe) && !File.directory?(exe)
+      }
+    end
+
+    nil
+  end
 
   # Method that calls gnuplot via open3 and performs the plotting.
   # Any plot data, i.e. dumb terminal, is returned.
